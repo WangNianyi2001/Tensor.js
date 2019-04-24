@@ -47,7 +47,13 @@
 			return tensor instanceof Scalar
 				? this.scale(tensor.scale)
 				: new Tensor(this.map(component => component.product(tensor)));
-		}
+		},
+		dot(tensor) {
+			if(!(tensor instanceof Tensor)) {
+				tensor = new Tensor(tensor);
+			}
+			return this.reduce((sum, component) => sum + component.dot(tensor), 0);
+		},
 	};
 	Object.defineProperty(Tensor.prototype, 'dimension', {
 		get() {
@@ -82,7 +88,17 @@
 				tensor = new Tensor(tensor);
 			}
 			return tensor.scale(this.value);
-		}
+		},
+		dot(tensor) {
+			if(!(tensor instanceof Tensor)) {
+				tensor = new Tensor(tensor);
+			}
+			return new Scalar(
+				tensor instanceof Scalar
+					? this * tensor
+					: tensor.reduce((sum, component) => sum + this.dot(component), 0)
+			)
+		},
 	};
 
 	window['Tensor'] = Tensor;
