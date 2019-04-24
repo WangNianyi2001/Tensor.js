@@ -29,6 +29,9 @@
 			return `[${this.join()}]`;
 		},
 		plus(tensor) {
+			if(!(tensor instanceof Tensor)) {
+				tensor = new Tensor(tensor);
+			}
 			if(!dimensionIsEqual(this.dimension, tensor.dimension)) {
 				throw new RangeError('Cannot plus tensors with unequal dimensions together');
 			}
@@ -37,6 +40,14 @@
 		scale(ratio) {
 			return new Tensor(this.map(component => component.scale(ratio)));
 		},
+		product(tensor) {
+			if(!(tensor instanceof Tensor)) {
+				tensor = new Tensor(tensor);
+			}
+			return tensor instanceof Scalar
+				? this.scale(tensor.scale)
+				: new Tensor(this.map(component => component.product(tensor)));
+		}
 	};
 	Object.defineProperty(Tensor.prototype, 'dimension', {
 		get() {
@@ -66,6 +77,12 @@
 		scale(ratio) {
 			return new Scalar(this.value * ratio);
 		},
+		product(tensor) {
+			if(!(tensor instanceof Tensor)) {
+				tensor = new Tensor(tensor);
+			}
+			return tensor.scale(this.value);
+		}
 	};
 
 	window['Tensor'] = Tensor;
