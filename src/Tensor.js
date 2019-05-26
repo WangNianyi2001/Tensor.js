@@ -1,10 +1,6 @@
 {
 	'use strict';
 
-	const dimensionIsEqual = (a, b) =>
-		a.length === b.length &&
-		a.every((rank, i) => rank === b[i]);
-
 	const Tensor = function Tensor(components) {
 		if(!(this instanceof Tensor)) {
 			return new Tensor(...arguments);
@@ -13,8 +9,7 @@
 			if(typeof components[Symbol.iterator] === 'function') {
 				this.push(...components.map(Tensor));
 				if(this.length) {
-					const dimension = this[0].dimension;
-					if(this.some(component => !dimensionIsEqual(dimension, component.dimension))) {
+					if(this.some(component => !this[0].hasSameDimension(component))) {
 						throw new RangeError('Tensor components have unequal dimensions');
 					}
 				}
@@ -32,7 +27,7 @@
 			if(!(tensor instanceof Tensor)) {
 				tensor = new Tensor(tensor);
 			}
-			if(!dimensionIsEqual(this.dimension, tensor.dimension)) {
+			if(!this.hasSameDimension(tensor)) {
 				throw new RangeError('Cannot plus tensors with unequal dimensions together');
 			}
 			return new Tensor(this.map((component, i) => component.plus(tensor[i])));
@@ -53,6 +48,15 @@
 				tensor = new Tensor(tensor);
 			}
 			return this.reduce((sum, component) => sum + component.dot(tensor), 0);
+		},
+		hasSameDimension(tensor) {
+			const
+				a = this.dimension,
+				b = tensor.dimension;
+			return (
+				a.length === b.length &&
+				a.every((rank, i) => rank === b[i])
+			);
 		},
 	};
 	Object.defineProperty(Tensor.prototype, 'dimension', {
