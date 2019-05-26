@@ -103,6 +103,9 @@
 					: tensor.reduce((sum, component) => sum + this.dot(component), 0)
 			)
 		},
+		hasSameDimension(tensor) {
+			return tensor instanceof Scalar;
+		},
 	};
 
 	window['Tensor'] = Tensor;
