@@ -5,17 +5,18 @@
 		if(!(this instanceof Tensor)) {
 			return new Tensor(...arguments);
 		}
-		if(arguments.length) {
-			if(typeof components[Symbol.iterator] === 'function') {
-				this.push(...components.map(Tensor));
-				if(this.length) {
-					if(this.some(component => !this[0].hasSameDimension(component))) {
-						throw new RangeError('Tensor components have unequal dimensions');
-					}
+		if(!arguments.length) {
+			throw new ReferenceError('No arguments received');
+		}
+		if(typeof components[Symbol.iterator] === 'function') {
+			this.push(...components.map(Tensor));
+			if(this.length) {
+				if(this.some(component => !this[0].hasSameDimension(component))) {
+					throw new RangeError('Tensor components have unequal dimensions');
 				}
-			} else {
-				return new Scalar(components);
 			}
+		} else {
+			return new Scalar(components);
 		}
 	};
 	Tensor.prototype = {
@@ -35,35 +36,52 @@
 		scale(ratio) {
 			return new Tensor(this.map(component => component.scale(ratio)));
 		},
-		product(tensor) {
+		outer(tensor) {
 			if(!(tensor instanceof Tensor)) {
 				tensor = new Tensor(tensor);
 			}
 			return tensor instanceof Scalar
 				? this.scale(tensor.scale)
-				: new Tensor(this.map(component => component.product(tensor)));
+				: new Tensor(this.map(component => component.outer(tensor)));
 		},
-		dot(tensor) {
+		inner(tensor) {
 			if(!(tensor instanceof Tensor)) {
 				tensor = new Tensor(tensor);
 			}
-			return this.reduce((sum, component) => sum + component.dot(tensor), 0);
+			if(tensor instanceof Scalar) {
+				return this.scale(tensor);
+			}
+			if(!this.dimensionallyContains(tensor)) {
+				throw TypeError('Dotter does not dimensionally contains dottee');
+			}
+			return this.reduce((sum, component, i) => {
+				return sum.plus(component.inner(tensor[i]));
+			}, Tensor.zero(this.dimensions.slice(tensor.dimensions.length)));
+		},
+		dimensionallyContains(tensor) {
+			return tensor.dimensions.every(
+				(dimension, i) => dimension === this.dimensions[i]
+			);
 		},
 		hasSameDimension(tensor) {
-			const
-				a = this.dimension,
-				b = tensor.dimension;
 			return (
-				a.length === b.length &&
-				a.every((rank, i) => rank === b[i])
+				this.dimensions.length === tensor.dimensions.length &&
+				this.dimensionallyContains(tensor)
 			);
 		},
 	};
-	Object.defineProperty(Tensor.prototype, 'dimension', {
+	Object.defineProperty(Tensor.prototype, 'dimensions', {
 		get() {
-			return [this.length, ...(this.length ? this[0].dimension : [])];
+			return [this.length, ...(this.length ? this[0].dimensions : [])];
 		}
 	});
+	Tensor.zero = function(dimensions) {
+		if(dimensions.length === 0) {
+			return new Scalar(0);
+		}
+		return new Tensor(Array(dimensions.shift()).fill(0).map(() => Tensor.zero(dimensions)));
+	};
+	window['Tensor'] = Tensor;
 
 	const Scalar = function Scalar(value) {
 		if(!(this instanceof Scalar)) {
@@ -74,7 +92,7 @@
 	Scalar.prototype = {
 		__proto__: Tensor.prototype,
 		[Symbol.iterator]: undefined,
-		dimension: [],
+		dimensions: [],
 		valueOf() {
 			return this.value;
 		},
@@ -87,26 +105,43 @@
 		scale(ratio) {
 			return new Scalar(this.value * ratio);
 		},
-		product(tensor) {
+		outer(tensor) {
 			if(!(tensor instanceof Tensor)) {
 				tensor = new Tensor(tensor);
 			}
 			return tensor.scale(this.value);
 		},
-		dot(tensor) {
-			if(!(tensor instanceof Tensor)) {
-				tensor = new Tensor(tensor);
+		inner(scalar) {
+			if(!(scalar instanceof Scalar)) {
+				throw TypeError('Dotter does not dimensionally contains dottee');
 			}
-			return new Scalar(
-				tensor instanceof Scalar
-					? this * tensor
-					: tensor.reduce((sum, component) => sum + this.dot(component), 0)
-			)
+			return new Scalar(this.scale(scalar));
+		},
+		dimensionallyContains(tensor) {
+			return tensor instanceof Scalar;
 		},
 		hasSameDimension(tensor) {
 			return tensor instanceof Scalar;
 		},
 	};
+	Tensor['Scalar'] = Scalar;
 
-	window['Tensor'] = Tensor;
+	const Vector = function Vector(elements) {
+		if(!(this instanceof Vector)) {
+			return new Vector(...arguments);
+		}
+		if(!arguments.length) {
+			throw new ReferenceError('No arguments received');
+		}
+		this.push(...elements.map(Scalar));
+	};
+	Vector.prototype = {
+		__proto__: Tensor.prototype,
+	};
+	Object.defineProperty(Vector.prototype, 'dimensions', {
+		get() {
+			return [this.length];
+		}
+	});
+	Tensor['Vector'] = Vector;
 }

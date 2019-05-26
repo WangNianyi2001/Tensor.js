@@ -62,10 +62,11 @@ There are 4 operations defined as "arithmetic" for tensors: plus, scale, dot & p
 
 ### Plus
 
-Plus two tensors into one by performing addition on each elements.
-The inputs must have same dimensions.
+This operation adds 2 tensors together.
+As the result, each of their corresponding elements are added together
+numerically.
 
-This operation is commutative.
+The input tensors must have same dimensions.
 
 Usage:
 ```js
@@ -74,44 +75,37 @@ const result = a.plus(b);
 
 ### Scale
 
-Scale a tensor by a scalar factor (by its elements).
+This operation scales a tensor by a scalar factor.
+As the result, each of its elements are multiplied by the scalar.
 
-Usage:
 ```js
-const result = vector.scale(scalar);
+const result = tensor.scale(scalar);
 ```
 
-### Dot
+### Inner
 
-Generalized dot product.
+This operation takes 2 inputs, called `a` and `b`.
+It operates recursively on each pairs of corresponding
+components of `a` and `b`, and adds them up.
+Innering a tensor by a scalar is equivalent to scaling.
 
-Takes two tensor inputs, computes the dot product of each of their components,
-then adds them up.
+The `a`'s dimensions must sequentially contains the `b`'s dimensions.
+The dimensions of their result is the complement of the `b`'s on the `a`'s.
 
-For scalars, the dot product with a tensor equals to the tensor scaled by the
-ratio of the scalar.
-
-The output must be a scalar.
-
-This operation is commutative.
-
-Usage:
 ```js
-const result = a.dot(b);
+const result = a.inner(b);
 ```
 
-### Product
+### Outer
 
-Direct product applied on tensors.
+This operation takes 2 tensor inputs, called `a` and `b`.
+It transforms each of the `a`'s elements into `b` scaled by it.
 
-Takes two tensor inputs, transforms each elements of the first tensor into its
-dot product with the second tensor.
-
-This operation is not commutative.
+The result's dimensions are the concatenation of `a`'s and `b`'s.
 
 Usage:
 ```js
-const result = a.product(b);
+const result = a.outer(b);
 ```
 
 
@@ -135,7 +129,7 @@ const tensor = new Tensor([
 	[0, 1, 2],
 	[3, 4, 5],
 ]);
-const dimension = tensor.dimension;	// [2, 3]
+const dimensions = tensor.dimensions;	// [2, 3]
 ```
 
 ## Conversion & formatting
