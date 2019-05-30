@@ -45,20 +45,10 @@ For further reading, please checkout relevant articles on
 [Wikipedia](https://en.wikipedia.org/wiki/Tensor).
 
 
-## Processing scalars
-
-Scalars are treated a bit of differently from normal tensors, since they are
-some sort of "edge cases" in the world of tensors (they are atomic).
-A function called `Scalar` is created to solve the case.
-It is derived from `Tensor` (in the sense of prototype chain), so applying
-`instanceof Tensor` on a scalar instance would always return `true`.
-It would be automatically invoked when calling `Tensor` with a single scalar
-passed in, so there is no need to call it explicitly.
-
-
 ## Doing arithmetic operations
 
-There are 4 operations defined as "arithmetic" for tensors: plus, scale, dot & product.
+There are 4 operations defined as "arithmetic" for tensors: plus, scale, inner &
+outer.
 
 ### Plus
 
@@ -131,6 +121,17 @@ const tensor = new Tensor([
 ]);
 const dimensions = tensor.dimensions;	// [2, 3]
 ```
+
+
+## Processing scalars
+
+Scalars are treated a bit of differently from normal tensors, since they are
+some sort of "edge cases" in the world of tensors (they are atomic).
+A function called `Scalar` is created to solve the case.
+It is derived from `Tensor` (in the sense of prototype chain), so applying
+`instanceof Tensor` on a scalar instance would always return `true`.
+It would be automatically invoked when calling `Tensor` with a single scalar
+passed in, so there is no need to call it explicitly.
 
 ## Conversion & formatting
 
